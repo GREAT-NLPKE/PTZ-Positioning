@@ -1,0 +1,554 @@
+<head>
+    <link type="text/css" href="{{ url_for('static', filename='css/index.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='notiflix/notiflix-3.2.5.min.css') }}" />
+
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script src="{{ url_for('static', filename='notiflix/notiflix-3.2.5.min.js') }}"></script>
+    <!-- <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width"> -->
+    <link rel="icon" href="{{ url_for('static', filename='icon.ico') }}">
+    <!-- <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css"/> -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
+    <!-- <script scr="{{ url_for('static', filename='script/main.js') }}"></script>  -->
+    <!-- <script src="https://webapi.amap.com/maps?v=2.0&key=a7fa41951d690b8d3f74078547ed65fa"></script> -->
+    ​<meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+
+<body onload="caption();">
+    <audio src="{{url_for('static',filename='alarm.mp3')}}" controls id="sound" type="audio/mpeg" style="display:none;"></audio>
+    <script>
+        function caption(){
+            $.ajax({
+                url:'http://58.199.164.151:9876/check',
+                contentType: "GET",
+                data:{},
+                success:function(res){
+                    Notiflix.Notify.success('服务器后端功能正常',{timeout:1500});
+                },
+                error:function(res){
+                    Notiflix.Notify.error('服务器后端功能异常');
+                }
+            });
+        }
+    </script>
+    <script type="text/javascript">
+        window._AMapSecurityConfig = {
+          securityJsCode:"a47b503d2d9055c31b4c9f49338bda88",
+        }
+    </script>
+      <script src="https://webapi.amap.com/loader.js"></script>
+      <script type="text/javascript" >
+        AMapLoader.load({
+          key: "a7fa41951d690b8d3f74078547ed65fa",       // 申请好的Web端开发者Key，首次调用 load 时必填
+          version: "2.0",                 // 指定要加载的 JSAPI 的版本，缺省时默认为 1.4.15
+        }).then((AMap)=>{
+            var map = new AMap.Map('container',{ 
+                pitch:30, 
+                viewMode:'3D', 
+                // terrain: true ,
+                mapStyle: 'amap://styles/macaron',
+                zoom: 12
+          });
+        }).catch((e)=>{
+          console.error(e);  //加载错误提示
+        });   
+        
+    </script>
+
+
+    <div style=" position: absolute; top: 3%; left: 3%; text-align: left;">
+        <a href="https://www.shu.edu.cn" target="_blank">
+            <img src="{{url_for('static',filename='image/SHU.jpeg')}}" alt="上海大学官网" style="width: 160px; height: 80px;">
+        </a>
+        <a href="https://scie.shu.edu.cn/info/1281/6334.htm" target="_blank">
+            <img src="{{url_for('static',filename='image/great_logo.jpg')}}" style="left: 10px; width: 120px; height: 60px;">
+        </a>
+    </div>
+    <div style=" position: absolute; top: 3%; right: 5%; text-align: right;">
+        <a href="https://www.china-tower.com/" target="_blank">
+            <img src="{{url_for('static',filename='image/tieta.png')}}" alt="" style="width: 160px; height: 80px;">
+        </a>
+    </div>
+    <h1 class="title-css">火灾告警监控平台</h1>
+
+    <div style="margin-left: 5%; width: 45%; float: left;">
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="inputGroupFileAddon01">监控图像</span>
+            </div>
+            <div class="custom-file">
+              <input type="file" class="custom-file-input" id="imagefile" onchange="handleimage();">
+              <label class="custom-file-label" for="imagefile" id="imagelabel">选择本地图片……</label>
+            </div>
+        </div>
+
+        <img src="{{url_for('static',filename='image/image.svg')}}" style="width: 100%;height: 40%;" id="image" class="figure-img"/>
+    </div>
+    
+
+
+    <div style="margin-right: 5%; width: 40%; float: right;" onchange="locate();">
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text" id="inputGroupFileAddon01">相机参数</span>
+            </div>
+            <div class="custom-file">
+              <input type="file" class="custom-file-input" id="configfile" onchange="handleconfig();">
+              <label class="custom-file-label" for="configfile" id="configlabel">选择参数文件……</label>
+            </div>
+        </div>
+        <form><div class="border border-info rounded" style="padding-top: 2%; padding-bottom: 2%;">
+            <div class="form-row" style="width: 95%; margin-left: 2%;">
+                <!-- <div class="form-group col-md-6">
+                    <label>图像宽</label>
+                    <input type="number" class="form-control" id="para_image_w">
+                </div>
+                <div class="form-group col-md-6">
+                    <label>图像高</label>
+                    <input type="number" class="form-control" id="para_image_h">
+                </div> -->
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text">图像分辨率(WxH)</span>
+                    </div>
+                    <input type="number" class="form-control" id="para_image_w" placeholder="宽">
+                    <input type="number"  class="form-control" id="para_image_h" placeholder="高">
+                </div>
+            </div>
+
+            <div class="form-row" style="width: 95%; margin-top: 2%; margin-left: 2%;">
+                <!-- <div class="form-group col-md-4">
+                  <label>P</label>
+                  <input type="text" class="form-control" id="para_p">
+                </div>
+                <div class="form-group col-md-4">
+                  <label>T</label>
+                  <input type="text" class="form-control" id="para_t">
+                </div>
+                <div class="form-group col-md-4">
+                    <label>Z</label>
+                    <input type="text" class="form-control" id="para_z">
+                </div> -->
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text">PTZ</span>
+                    </div>
+                    <input type="text" class="form-control" id="para_p" placeholder="P">
+                    <input type="text"  class="form-control" id="para_t" placeholder="T">
+                    <input type="text"  class="form-control" id="para_z" placeholder="Z">
+                </div>
+            </div>
+
+            <div class="form-row" style="width: 95%; margin-top: 2%; margin-left: 2%;">
+                <!-- <div class="form-group col-md-4">
+                    <label>相机经度</label>
+                    <input type="text" class="form-control" id="para_longitude">
+                </div>
+                <div class="form-group col-md-4">
+                    <label>相机纬度</label>
+                    <input type="text" class="form-control" id="para_latitude">
+                </div>
+                <div class="form-group col-md-4">
+                    <label>相机高度</label>
+                    <input type="number" class="form-control" id="para_height" placeholder="(米)">
+                </div> -->
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text">相机位置(经度/纬度/高度)</span>
+                    </div>
+                    <input type="text" class="form-control" id="para_longitude" placeholder="经度">
+                    <input type="text"  class="form-control" id="para_latitude" placeholder="纬度">
+                    <input type="text"  class="form-control" id="para_height" placeholder="高度">
+                </div>
+            </div>
+            <div class="form-row" style="width: 95%; margin-top: 2%; margin-left: 2%;">
+                <!-- <div class="form-group col-md-3">
+                    <label>CMOS宽</label>
+                    <input type="text" class="form-control" id="para_sensor_w" placeholder="(英寸)">
+                </div>
+                <div class="form-group col-md-3">
+                    <label>CMOS高</label>
+                    <input type="text" class="form-control" id="para_sensor_h" placeholder="(英寸)">
+                </div>
+                <div class="form-group col-md-3">
+                    <label>焦距</label>
+                    <input type="number" class="form-control" id="para_focal">
+                </div>
+                <div class="form-group col-md-3">
+                    <label>初始角度</label>
+                    <input type="number" class="form-control" id="para_initangle">
+                </div> -->
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text">CMOS尺寸(WxH)</span>
+                    </div>
+                    <input type="text" class="form-control" id="para_sensor_w" placeholder="宽">
+                    <input type="text"  class="form-control" id="para_sensor_h" placeholder="高">
+                
+                </div>
+            </div>
+
+            <div class="form-row" style="width: 97%; margin-top: 2%; margin-left: 1.5%;">
+                <div class="col-sm-6">
+                    <div class="input-group">
+                      <div class="input-group-prepend"><div class="input-group-text" >焦距</div></div>
+                      <input type="number" class="form-control" id="para_focal">
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="input-group">
+                      <div class="input-group-prepend"><div class="input-group-text" >相机初始角度</div></div>
+                      <input type="text" class="form-control" id="para_initangle">
+                    </div>
+                </div>
+            </div>
+        </div>
+        </form>
+
+
+    </div>
+
+    <div>
+        <div id="container" style="margin-right: 5%; margin-left: 5%; width: 45%; float: left; clear: none;"></div>
+        <!-- <div id="panel"></div> -->
+        <div style="margin-right: 5%; width: 40%; float: right;">
+            <!-- <h1 class="display-6" style="font-size:larger">定位结果</h1> -->
+            <div class="border border-danger rounded" style="float: left;width: 100%;">
+                <div class="form-group row" style="width: 95%; margin-top: 2%; margin-left: 2%;">
+                    <!-- <label for="danger_point" class="col-sm-2 col-form-label" style="float: right;">事故点</label>
+                    <div class="col-sm-10">
+                        <input type="text" readonly class="form-control" id="danger_point" value="">
+                    </div> -->
+                    <div class="col-sm-12">
+                        <div class="input-group">
+                        <div class="input-group-prepend"><div class="input-group-text alert-info" >告警坐标</div></div>
+                        <input type="text" class="form-control" id="danger_point" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group row" style="width: 95%; margin-left: 2%; margin-top: -10px;">
+                    <!-- <label for="danger_address" class="col-sm-2 col-form-label">地址</label>
+                    <div class="col-sm-10">
+                        <input type="text" readonly class="form-control" id="danger_address" value="">
+                    </div> -->
+                    <div class="col-sm-12">
+                        <div class="input-group">
+                        <div class="input-group-prepend"><div class="input-group-text alert-info" >参考地址</div></div>
+                        <input type="text" class="form-control" id="danger_address" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group row" style="width: 95%; margin-left: 2%; margin-top: -10px;">
+                    <!-- <label for="distance" class="col-sm-2 col-form-label">路程</label>
+                    <div class="col-sm-4">
+                        <input type="text" readonly class="form-control" id="distance" value="">
+                    </div>
+                    <label for="time" class="col-sm-2 col-form-label">耗时</label>
+                    <div class="col-sm-4">
+                        <input type="text" readonly class="form-control" id="time" value="">
+                    </div> -->
+                    <div class="col-sm-6">
+                        <div class="input-group">
+                        <div class="input-group-prepend"><div class="input-group-text alert-danger" >最快路程</div></div>
+                        <input type="text" class="form-control" id="distance" readonly>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="input-group">
+                        <div class="input-group-prepend"><div class="input-group-text alert-danger" >估计耗时</div></div>
+                        <input type="text" class="form-control" id="time" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group row" style="width: 95%; margin-left: 2%; margin-top: -10px;">
+                    <!-- <label for="weather" class="col-sm-2 col-form-label">天气</label>
+                    <div class="col-sm-2">
+                        <input type="text" readonly class="form-control" id="weather" value="">
+                    </div>
+
+                    <label for="temperature" class="col-sm-2 col-form-label">温度</label>
+                    <div class="col-sm-2">
+                        <input type="text" readonly class="form-control" id="temperature" value="">
+                    </div>
+
+                    <label for="humidity" class="col-sm-2 col-form-label">湿度</label>
+                    <div class="col-sm-2">
+                        <input type="text" readonly class="form-control" id="humidity" value="">
+                    </div> -->
+                    <div class="col-sm-4">
+                        <div class="input-group">
+                        <div class="input-group-prepend"><div class="input-group-text alert-primary" >天气</div></div>
+                        <input type="text" class="form-control" id="weather" readonly>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="input-group">
+                        <div class="input-group-prepend"><div class="input-group-text alert-primary" >温度</div></div>
+                        <input type="text" class="form-control" id="temperature" readonly>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="input-group">
+                        <div class="input-group-prepend"><div class="input-group-text alert-primary" >湿度</div></div>
+                        <input type="text" class="form-control" id="humidity" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group row" style="width: 95%; margin-left: 2%; margin-top: -10px;">
+                    <!-- <label for="winddirection" class="col-sm-2 col-form-label">风向</label>
+                    <div class="col-sm-4">
+                        <input type="text" readonly class="form-control" id="winddirection" value="">
+                    </div>
+                    
+                    <label for="windpower" class="col-sm-2 col-form-label">风力</label>
+                    <div class="col-sm-4">
+                        <input type="text" readonly class="form-control" id="windpower" value="">
+                    </div> -->
+                    <div class="col-sm-6">
+                        <div class="input-group">
+                        <div class="input-group-prepend"><div class="input-group-text alert-warning" >风向</div></div>
+                        <input type="text" class="form-control" id="winddirection" readonly>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="input-group">
+                        <div class="input-group-prepend"><div class="input-group-text alert-warning" >风力</div></div>
+                        <input type="text" class="form-control" id="windpower" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="margin-top: 0%; width: 100%; float: right;padding-right: 5%;">
+            <blockquote class="blockquote text-right" >
+                <!-- <p class="mb-0">本平台由上海大学GREAT实验室开发，仅供学术Demo使用。</p> -->
+                <footer class="blockquote-footer">本平台由上海大学GREAT实验室开发，仅供学术研究使用。 </footer>
+            </blockquote>
+        </div>
+    </div>
+
+    <!-- <div style="margin-right: 5%; margin-left: 5%; margin-top: -18%; height: 15%; width: 40%; float: right;">
+        
+    </div> -->
+
+    
+
+</body>
+
+<script>
+    var bbox = Array();
+
+    function handleimage(){
+        var image = document.getElementById('imagefile').files[0];
+        document.getElementById('imagelabel').innerHTML = image.name;
+        console.log(image);
+
+        Notiflix.Loading.dots('识别中..',{
+            clickToClose: false,
+            backgroundColor: 'rgba(0,0,0,0.8)',
+        });
+
+        var reader = new FileReader();
+        reader.onload = function(){
+        // 当 FileReader 读取文件时候，读取的结果会放在 FileReader.result 属性中
+        document.getElementById('image').src = this.result;
+      };
+        reader.readAsDataURL(image);
+        document.getElementById('image').style.display="block"
+
+        var form_data = new FormData();
+        form_data.append('image',image);
+        $.ajax({
+            url:'http://58.199.164.151:9876/predict',
+            type:'POST',
+            contentType:false,
+            dataType : "json",
+            processData: false, 
+            data:form_data,
+            success:function(res){
+                Notiflix.Loading.remove();
+                console.log(res);
+                document.getElementById('para_image_w').value = res.width;
+                document.getElementById('para_image_h').value = res.height;
+                
+                document.getElementById('image').src = "data:;base64,"+res.output_image;
+                bbox = res.boxes;
+                locate();
+                
+            },
+            error:function(res){
+                Notiflix.Loading.remove();
+                console.log('fail');
+            }
+        })
+        
+    }
+
+    function handleconfig(){
+        var config = document.getElementById('configfile').files[0];
+        document.getElementById('configlabel').innerHTML = config.name;
+        var reader = new FileReader();
+        reader.readAsText(config);
+        reader.onload = function(){
+        var json_str = this.result;
+        var json_obj = JSON.parse(json_str);
+
+        document.getElementById('para_p').value = json_obj.PTZ[0];
+        document.getElementById('para_t').value = json_obj.PTZ[1];
+        document.getElementById('para_z').value = json_obj.PTZ[2];
+
+        document.getElementById('para_latitude').value = json_obj.location[1];
+        document.getElementById('para_longitude').value = json_obj.location[0];
+        document.getElementById('para_height').value = json_obj.cameraHeight;
+        
+        document.getElementById('para_sensor_w').value = json_obj.sensor_size[0];
+        document.getElementById('para_sensor_h').value = json_obj.sensor_size[1];
+        document.getElementById('para_initangle').value = json_obj.initAngle;
+        document.getElementById('para_focal').value = json_obj.focal;
+        locate();
+      };
+      
+    }
+
+    function locate(){
+
+        if (document.getElementById('para_p').value!='' && document.getElementById('para_t').value!='' && document.getElementById('para_z').value!='' && document.getElementById('para_latitude').value!='' && document.getElementById('para_longitude').value!='' && document.getElementById('para_height').value!='' && document.getElementById('para_sensor_w').value!='' && document.getElementById('para_sensor_h').value!='' && document.getElementById('para_initangle').value!='' && document.getElementById('para_focal').value!='' && document.getElementById('para_image_w').value!='' && document.getElementById('para_image_h').value!='' && bbox.length!=0){
+            $.ajax({
+                url:'http://58.199.164.151:9876/locate',
+                contentType: "GET",
+                data: {
+                        'para_p':document.getElementById('para_p').value,
+                        'para_t':document.getElementById('para_t').value,
+                        'para_z':document.getElementById('para_z').value,
+                        'para_latitude':document.getElementById('para_latitude').value,
+                        'para_longitude':document.getElementById('para_longitude').value,
+                        'para_height':document.getElementById('para_height').value,
+                        'para_sensor_w':document.getElementById('para_sensor_w').value,
+                        'para_sensor_h':document.getElementById('para_sensor_h').value,
+                        'para_focal':document.getElementById('para_focal').value,
+                        'para_initangle':document.getElementById('para_initangle').value,
+                        'para_image_w':document.getElementById('para_image_w').value,
+                        'para_image_h':document.getElementById('para_image_h').value,
+                        'x1':bbox[0],
+                        'y1':bbox[1],
+                        'x2':bbox[2],
+                        'y2':bbox[3],
+                    },
+                success:function(res){
+                    Notiflix.Report.warning(
+                        '发现疑似危险场景',
+                        '已为您规划最快前往路径；如遇森林火灾，请关注当前风力情况。',
+                        '确认',
+                    );
+                    let audio = document.getElementById('sound');
+                    audio.play();
+                    console.log(res);
+                    
+                    var satellite = new AMap.TileLayer.Satellite();
+                    // var roadNet = new AMap.TileLayer.RoadNet();
+
+                    var marker, map = new AMap.Map("container", {
+                        pitch:30, 
+                        viewMode:'3D', 
+                        // layers: [
+                        //         satellite
+                        //     ],
+                        // terrain: true ,
+                        resizeEnable: true,
+                        center: [document.getElementById('para_longitude').value,document.getElementById('para_latitude').value],
+                        zoom: 12,
+                        mapStyle: 'amap://styles/macaron',
+                    });
+                    
+                    AMap.plugin([
+                        'AMap.Scale',
+                    ], function(){
+                        // 在图面添加比例尺控件，展示地图在当前层级和纬度下的比例尺
+                        map.addControl(new AMap.Scale());
+                    });
+
+                    var monitor_icon = new AMap.Icon({
+                        image: "{{url_for('static',filename='image/monitor.png')}}",
+                        imageSize: new AMap.Size(50, 50)
+                    });
+                    var camera = new AMap.Marker({
+                        position: [document.getElementById('para_longitude').value,document.getElementById('para_latitude').value],
+                        icon: monitor_icon,
+                        offset: new AMap.Pixel(-25, -45),
+                        title: '监控点'
+                        });
+                    map.add(camera);
+
+                    var danger_icon = new AMap.Icon({
+                        image: "{{url_for('static',filename='image/danger.png')}}",
+                        imageSize: new AMap.Size(50, 50)
+                    });
+                    var marker = new AMap.Marker({
+                        position: [res.longitude,res.latitude],
+                        icon: danger_icon,
+                        offset: new AMap.Pixel(-25, -45),
+                        title: '事故点'
+                        })
+                    map.add(marker);
+
+                    document.getElementById('danger_point').value = '经度：'+res.longitude+'  纬度：'+res.latitude
+                    
+                    AMap.plugin('AMap.Geocoder', function() {
+                        var geocoder = new AMap.Geocoder();
+                        geocoder.getAddress([res.longitude,res.latitude], function(status, result) {
+                            if (status === 'complete' && result.info === 'OK') {
+                                console.log(result);
+                                document.getElementById('danger_address').value = result.regeocode.formattedAddress;
+                            }
+                        })
+                    });
+
+                    AMap.plugin('AMap.Riding', function() {
+                        var driving = new AMap.Riding({
+                            policy: 2,
+                            map: map,
+                        })
+                        var startLngLat = [document.getElementById('para_longitude').value,document.getElementById('para_latitude').value]
+                        var endLngLat = [res.longitude,res.latitude]
+                        
+                        driving.search(startLngLat, endLngLat, function (status, result) {
+                            console.log(result);
+                            document.getElementById('distance').value =  Math.round(result.routes[0].distance/100)/10+' km';
+                            document.getElementById('time').value = Math.round(result.routes[0].time/60/5)+' min';
+                        });
+                    });
+                    
+                    
+
+                    //加载天气查询插件
+                    AMap.plugin('AMap.Weather', function() {
+                        //创建天气查询实例
+                        var weather = new AMap.Weather();
+                        AMap.plugin('AMap.Geocoder', function() {
+                            var geocoder = new AMap.Geocoder();
+                            geocoder.getAddress([res.longitude,res.latitude], function(status, result) {
+                                if (status === 'complete' && result.info === 'OK') {
+                                    var adcode = result.regeocode.addressComponent.adcode;
+                                    //执行实时天气信息查询
+                                    weather.getLive(adcode, function(err, data) {
+                                        console.log(err, data);
+                                        document.getElementById('weather').value=data.weather;
+                                        document.getElementById('temperature').value=data.temperature+' ­°C';
+                                        document.getElementById('humidity').value=data.humidity+' %rh';
+                                        document.getElementById('winddirection').value=data.windDirection;
+                                        document.getElementById('windpower').value=data.windPower+' 级';
+                                    });
+                                }
+                            })
+                        });
+                    });    
+                }
+            })
+        }
+    }
+</script>
